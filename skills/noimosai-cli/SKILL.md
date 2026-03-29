@@ -1,6 +1,6 @@
 ---
 name: noimosai-cli
-description: "NoimosAI CLI reference for social media marketing. Use when working with noimosai commands, publishing social media posts, or automating content workflows. Triggers on: 'noimosai', 'NoimosAI', 'noimos', 'social media post', 'marketing', 'SNS', 'content creation', 'schedule post'."
+description: "Use this skill whenever the user mentions 'noimosai', 'NoimosAI', or 'noimos' in any context — including CLI usage, commands, options, login, config, posting, scheduling, workspace management, agent listing, session resumption, or troubleshooting. Also use when the user asks about publishing social media posts via a CLI tool, automating SNS content workflows, or generating and scheduling posts programmatically. This is the sole authoritative reference for the noimosai CLI tool. Do NOT trigger for general social media development (share buttons, webhooks, APIs) or unrelated CLI tools."
 ---
 
 # NoimosAI CLI Reference
@@ -8,28 +8,6 @@ description: "NoimosAI CLI reference for social media marketing. Use when workin
 CLI tool for NoimosAI - generate and publish social media content via AI agents.
 
 **Supported platforms:** X (Twitter), Threads, Facebook, Instagram, YouTube, LinkedIn, TikTok, Bluesky, Pinterest, Note, WordPress
-
-## Installation
-
-```bash
-npm install -g @agos-labs/noimosai-cli
-```
-
-## Quick Start
-
-```bash
-# 1. Authenticate
-noimosai login
-
-# 2. Start interactive chat
-noimosai
-
-# 3. Or one-shot: generate posts as JSON
-noimosai chat "Create X and Instagram posts about AI trends" --output json > posts.json
-
-# 4. Publish
-noimosai post posts.json --now
-```
 
 ## Commands
 
@@ -42,17 +20,37 @@ noimosai post posts.json --now
 
 ### Chat
 
-```bash
-noimosai chat [prompt] [options]
-```
-
-Without `[prompt]`, starts interactive chat UI. With `[prompt]`, runs one-shot and exits.
+`noimosai chat` without options starts interactive chat. With `-p`, runs one-shot and exits.
 
 | Option                  | Description                                                     |
 | ----------------------- | --------------------------------------------------------------- |
-| `-o, --output <format>` | `text` (default) or `json` - JSON extracts structured post data |
+| `-p, --prompt <text>`   | One-shot message to the agent                                   |
+| `-r, --resume <id>`     | Resume a previous session                                       |
 | `-w, --workspace <id>`  | Override workspace ID                                           |
-| `-s, --session <id>`    | Continue an existing conversation                               |
+| `-o, --output <format>` | `text` (default) or `json` - JSON extracts structured post data |
+| `--agent <id>`          | Specify an agent to chat with                                   |
+
+### Agent
+
+| Command               | Description                  |
+| --------------------- | ---------------------------- |
+| `noimosai agent list` | List agents in the workspace |
+
+Options: `-w, --workspace <id>` to override default workspace ID.
+
+### Workspace
+
+| Command                   | Description              |
+| ------------------------- | ------------------------ |
+| `noimosai workspace list` | List available workspaces |
+
+### Integration
+
+| Command                       | Description                    |
+| ----------------------------- | ------------------------------ |
+| `noimosai integration list`   | List connected integrations    |
+
+Options: `-w, --workspace <id>` to override default workspace ID.
 
 ### Post
 
@@ -60,7 +58,7 @@ Without `[prompt]`, starts interactive chat UI. With `[prompt]`, runs one-shot a
 noimosai post <file> [options]
 ```
 
-Publish posts from a JSON file (NoimosPostJson format, as output by `chat --output json`).
+Publish posts from a JSON file (NoimosPostJson format, as output by `noimosai chat -p "..." --output json`).
 
 | Option                  | Description                                               |
 | ----------------------- | --------------------------------------------------------- |
@@ -77,36 +75,15 @@ Publish posts from a JSON file (NoimosPostJson format, as output by `chat --outp
 | `noimosai config get <key>`         | Get a config value         |
 | `noimosai config path`              | Show config file path      |
 
-**Config keys:**
+**Config keys:** `workspaceId`, `appUrl`, `agentRegion`
 
-| Key           | Description            | Values                                             |
-| ------------- | ---------------------- | -------------------------------------------------- |
-| `workspaceId` | Active workspace ID    | workspace ID string                                |
-| `appUrl`      | Application URL        | URL (default: `https://app.noimosai.com`)          |
-| `agentRegion` | Agent execution region | `auto` (default), `us-central1`, `asia-northeast1` |
-
-## Interactive Chat
-
-When running `noimosai` without arguments, an interactive terminal UI launches.
-
-**Slash commands:**
-
-| Command             | Description                            |
-| ------------------- | -------------------------------------- |
-| `/agent`            | Select an AI agent (workflow)          |
-| `/workspace`, `/ws` | Switch workspace (resets conversation) |
-| `/clear`, `/reset`  | Clear conversation history             |
-| `/exit`, `/quit`    | Exit the chat                          |
-
-**Post actions:** When the agent generates social media posts, an action bar appears with options to **Edit**, **Post Now**, or **Schedule** each post.
-
-## Non-Interactive Workflow
+## Workflow
 
 Generate, review, and publish in a pipeline:
 
 ```bash
 # Generate posts as JSON
-noimosai chat "Write 3 engaging tweets about sustainable tech" --output json > posts.json
+noimosai chat -p "Write 3 engaging tweets about sustainable tech" --output json > posts.json
 
 # Review and edit the JSON file as needed
 
@@ -121,11 +98,11 @@ To continue a conversation:
 
 ```bash
 # First message
-noimosai chat "Analyze our competitor's social strategy" --output json
+noimosai chat -p "Analyze our competitor's social strategy" --output json
 # Note the sessionId from output metadata
 
 # Follow-up in same session
-noimosai chat "Now create posts based on that analysis" --session <sessionId> --output json
+noimosai chat -p "Now create posts based on that analysis" --resume <sessionId> --output json
 ```
 
 ## Detailed References

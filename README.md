@@ -4,23 +4,22 @@ Agent skills for [NoimosAI](https://noimosai.com) - AI-powered social media mark
 
 ## Available Skills
 
-| Skill | Description |
-|-------|-------------|
+| Skill                                | Description                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------- |
 | [noimosai-cli](skills/noimosai-cli/) | NoimosAI CLI reference for social media content generation and publishing |
 
 ## Installation
 
 ```bash
-npx skills add agos-labs/noimos-skills
+npx skills add AGOS-Labs/noimosai_skill
 ```
 
 To install a specific skill:
 
 ```bash
-npx skills add agos-labs/noimos-skills -s noimosai-cli
+npx skills add AGOS-Labs/noimosai_skill -s noimosai-cli
 ```
 
-## Links
+## License
 
-- [NoimosAI](https://noimosai.com)
-- [Skills CLI](https://github.com/vercel-labs/skills)
+[Apache-2.0](LICENSE)
