@@ -11,13 +11,13 @@ Agent skills for [NoimosAI](https://noimosai.com) - AI-powered social media mark
 ## Installation
 
 ```bash
-npx skills add AGOS-Labs/noimosai_skill
+pnpm dlx skills add AGOS-Labs/noimosai_skill
 ```
 
 To install a specific skill:
 
 ```bash
-npx skills add AGOS-Labs/noimosai_skill -s noimosai-cli
+pnpm dlx skills add AGOS-Labs/noimosai_skill -s noimosai-cli
 ```
 
 ## License
