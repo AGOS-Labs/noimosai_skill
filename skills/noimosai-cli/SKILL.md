@@ -75,7 +75,7 @@ Publish posts from a JSON file (NoimosPostJson format, as output by `noimosai ch
 | `noimosai config get <key>`         | Get a config value         |
 | `noimosai config path`              | Show config file path      |
 
-**Config keys:** `workspaceId`, `appUrl`, `agentRegion`
+**Config keys:** `workspaceId`
 
 ## Workflow
 
