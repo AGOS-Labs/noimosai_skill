@@ -4,9 +4,10 @@ Agent skills for [NoimosAI](https://noimosai.com) - AI-powered social media mark
 
 ## Available Skills
 
-| Skill                                | Description                                                               |
-| ------------------------------------ | ------------------------------------------------------------------------- |
-| [noimosai-cli](skills/noimosai-cli/) | NoimosAI CLI reference for social media content generation and publishing |
+| Skill                                | Description                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| [noimosai-cli](skills/noimosai-cli/) | NoimosAI CLI reference for social media content generation and publishing       |
+| [noimosai-mcp](skills/noimosai-mcp/) | NoimosAI MCP toolkit playbooks: personalized posts, analytics, research, website |
 
 ## Installation
 

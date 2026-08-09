@@ -62,9 +62,68 @@ Publish posts from a JSON file (NoimosPostJson format, as output by `noimosai ch
 
 | Option                  | Description                                               |
 | ----------------------- | --------------------------------------------------------- |
-| `--now`                 | Publish immediately (required if no `--schedule`)         |
+| `--now`                 | Publish immediately                                       |
 | `--schedule <datetime>` | Schedule for later: `YYYY-MM-DD HH:MM` (30+ min from now) |
+| `--draft`               | Save as an in-app draft the user approves in NoimosAI     |
 | `--dry-run`             | Preview what would be sent without publishing             |
+
+Exactly one of `--now` / `--schedule` / `--draft` is required. Use `--draft` when the user has not explicitly approved the exact post text.
+
+### Upload media
+
+```bash
+noimosai upload-media <file> [--mime <type>] [-w <workspaceId>]
+```
+
+Uploads a local image/video/audio (max 32MB) to the workspace and prints the storage path a post's `media[].path` or `publish-article --header-image` accepts. Mime is inferred from the extension; pass `--mime` for unusual ones.
+
+### Delete posts
+
+```bash
+noimosai delete-post <postId...> --yes
+```
+
+Deletes every platform copy of each post by its `postId` (from `noimosai post` output or `tools run workspace/fetch_my_posts`). Cancels drafts/scheduled; a post that already went out is also removed FROM the platform — irreversible, hence the required `--yes`. Max 25 per call.
+
+### Publish an article
+
+```bash
+noimosai publish-article <file.md> --provider <WordPress|X|Substack> --account <providerAccountId> --yes
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `--title <title>` | Article title (default: the file's first `# ` heading) |
+| `--schedule <datetime>` | ISO datetime to schedule; omit to publish now |
+| `--header-image <gcsPath>` | Storage path of an uploaded header image (not a URL) |
+| `-w, --workspace <id>` | Override the configured workspace |
+
+The file is the markdown body. Real public action (`--yes` required); asynchronous — returns an `idempotencyKey` once queued. Same title+body to the same account within 24h is rejected as a duplicate. X Articles need Premium+/Verified Organization.
+
+### Tools
+
+```
+noimosai tools list [--server <group>]
+noimosai tools run <server>/<name> --args '<json>' [-w <workspaceId>]
+```
+
+Typed NoimosAI tools: workspace reads (past posts, brand context), analytics (GSC, GA4, Semrush), social search, media generation, and more.
+
+| Option | Description |
+| ------ | ----------- |
+| `--server <group>` | Filter `tools list` by group (e.g. `workspace`, `social`, `deep_analytics`) |
+| `--args <json>` | Tool arguments as a JSON object |
+| `-w, --workspace <id>` | Override the configured workspace |
+
+Tools marked `[billed]` in the listing deduct NoimosAI team credits per call at actual external-API/AI cost; unmarked tools are free reads. Calls are idempotent per invocation — a network retry never double-charges.
+
+Examples:
+
+```
+noimosai tools run workspace/fetch_my_posts --args '{"limit": 10}'
+noimosai tools run deep_analytics/gsc_search_performance --args '{"days": 28}'
+noimosai tools run social/search_x_posts --args '{"query": "AI agents"}'   # billed
+```
 
 ### Configuration
 
