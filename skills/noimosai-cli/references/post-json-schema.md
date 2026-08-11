@@ -21,7 +21,7 @@ The JSON format used for data exchange between `noimosai chat --output json` and
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `platform` | string | Yes | Platform name (e.g., `"X (Twitter)"`, `"Instagram"`) |
-| `dataKey` | string | Yes | Platform data key (see mapping below) |
+| `dataKey` | string | No | Platform data key — derived from `platform` when omitted (see mapping below). Pass through unchanged when it came from `chat` output |
 | `providerAccountId` | string | For publishing | Account ID (included in `chat --output json` output) |
 | `username` | string | No | Display username |
 | `textBlocks` | array | Yes | Array of `{ label?: string, text: string }` |
@@ -86,7 +86,7 @@ The JSON format used for data exchange between `noimosai chat --output json` and
 
 - `version` must be `"1"`
 - `posts` must be an array
-- Each post must have `platform` (string), `dataKey` (string), and `textBlocks` (array)
+- Each post must have `platform` (string) and `textBlocks` (array); `dataKey` is optional (derived from `platform`)
 - Each `textBlocks` entry must have `text` (string); `label` is optional
 - `media` is optional; each entry is an object with optional `url`, `mimeType`, `path`
 - `providerAccountId` is required when publishing via `noimosai post` (included automatically in `chat --output json` output)

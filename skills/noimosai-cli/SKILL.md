@@ -7,7 +7,7 @@ description: "Use this skill whenever the user mentions 'noimosai', 'NoimosAI', 
 
 CLI tool for NoimosAI - generate and publish social media content via AI agents.
 
-**Supported platforms:** X (Twitter), Threads, Facebook, Instagram, YouTube, LinkedIn, TikTok, Bluesky, Pinterest, Note, WordPress
+**Supported `post` platforms:** X (Twitter), Threads, Facebook, Instagram, YouTube, LinkedIn, TikTok, Bluesky, Mastodon, Snapchat, Pinterest, Note. Long-form to WordPress / Substack goes through `publish-article`, not `post`.
 
 ## Commands
 
@@ -68,6 +68,16 @@ Publish posts from a JSON file (NoimosPostJson format, as output by `noimosai ch
 | `--dry-run`             | Preview what would be sent without publishing             |
 
 Exactly one of `--now` / `--schedule` / `--draft` is required. Use `--draft` when the user has not explicitly approved the exact post text.
+
+Each entry's `platform` decides what the payload needs. Media is required for instagram / tiktok / pinterest / snapchat, and must be a VIDEO for youtube. Pinterest additionally needs `options.pinterest.boardId` (see `pinterest-boards`). Everything else — TikTok/YouTube/note titles, `igPostType`, privacy settings — is derived from the entry; set `options.<platform>.<field>` only to override. WordPress and Substack are not `post` targets: use `publish-article`. A missing requirement fails before anything is sent, naming the field.
+
+### Pinterest boards
+
+```bash
+noimosai pinterest-boards <providerAccountId> [-w <workspaceId>]
+```
+
+Lists the account's boards as `id<TAB>name (N pins, PRIVACY)`. A pin cannot be created without a board id — put it in the post entry's `options.pinterest.boardId`.
 
 ### Upload media
 

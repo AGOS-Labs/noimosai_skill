@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "noimosai": {
+      "type": "http",
+      "url": "https://mcp.noimosai.com/mcp"
+    }
+  }
+}

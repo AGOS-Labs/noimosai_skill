@@ -1,0 +1,13 @@
+{
+  "name": "noimosai",
+  "version": "1.0.0",
+  "description": "NoimosAI marketing toolkit for agents: workspace/brand data, social & SEO analytics reads, social search and trends, image/video generation, and publishing to connected accounts — plus skills that teach the execute → measure → improve loop.",
+  "author": {
+    "name": "AGOS Labs",
+    "url": "https://noimosai.com"
+  },
+  "homepage": "https://noimosai.com",
+  "repository": "https://github.com/AGOS-Labs/noimosai_skill",
+  "license": "Apache-2.0",
+  "keywords": ["marketing", "social-media", "seo", "analytics", "content", "noimosai"]
+}

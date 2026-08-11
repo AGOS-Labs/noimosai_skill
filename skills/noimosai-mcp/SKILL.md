@@ -27,12 +27,33 @@ Prefer direct tools when you (the host agent) can do the reasoning; use `chat` w
 2. `fetch_my_posts` — recent posts for the target account (free). Extract the account's real voice: tone, emoji usage, hashtag habits, typical length, hook style.
 3. Author the post text YOURSELF in that voice, in the workspace's output language.
 4. `post` with the right mode:
-   - `mode: "draft"` — DEFAULT unless the user explicitly approved the exact text. The post appears in NoimosAI as a draft the user approves in-app.
+   - Always pass `mode` explicitly — omitting it publishes immediately. `mode: "draft"` whenever the user has not explicitly approved the exact text; the post appears in NoimosAI as a draft the user approves in-app.
    - `mode: "publish"` — immediate. Only after the user approved the exact content.
    - `mode: "schedule"` + `scheduleAt` — approved content, later time.
    - `dryRun: true` first when unsure the payload is right.
 
 Never publish or schedule content the user has not seen. Drafts are always safe.
+
+### Per-platform requirements
+
+`platform` decides the payload shape. Anything not listed is derived from the entry — set it in `options.<platform>` only to override.
+
+| Platform | Media | Must set | Derived for you |
+|---|---|---|---|
+| x, threads, bluesky, mastodon | optional | — | one thread item per `textBlocks` entry; media rides the lead item |
+| facebook, linkedin | optional | — | — |
+| instagram | **required** | — | `igPostType`: REELS when the media is a video, else CAROUSEL |
+| tiktok | **required** | — | `title` = caption's first line (≤90); `postType` from the media mime |
+| youtube | **required — a video** | — | `title` = first line (≤100); `categoryId` 22; `privacyStatus` PUBLIC |
+| pinterest | **required** | `options.pinterest.boardId` | `description` = your text |
+| snapchat | **required** | — | `postType` SPOTLIGHT (dev environments only) |
+| note | optional (cover = first media item with a public `url`; `path`-only uploads are NOT resolved for note) | — | `title` = first line; `isDraft` follows `mode` |
+
+Pinterest: call `list_pinterest_boards` with the account's `providerAccountId` first and pass the chosen board's `id`. There is no default board — a pin cannot be created without one.
+
+WordPress and Substack are NOT `post` targets — they are long-form providers. Use `publish_article` (below).
+
+A missing requirement is rejected before anything is sent, with a message naming the field. Nothing in the batch publishes when one entry fails, so fix and re-send the whole call.
 
 Attaching media: pass a workspace storage `path` as the post's `media[].path`. Three sources: `generate_image`/`generate_video` return it in their **Structured result** block (use the `path`, not the url); `upload_media` uploads a LOCAL file (your own image, an ffmpeg-edited video; max 32MB) and returns its path; a public `media[].url` also works — the server downloads it into the workspace.
 
@@ -79,6 +100,17 @@ You build the site locally (Next.js or static — your own code, your own qualit
 ## Playbook: media generation
 
 `generate_image`, `edit_image`, `generate_video`, `generate_music`, `text_to_speech` (all billed — video is the most expensive). Confirm format/aspect/duration with the user before generating; regenerations cost the same as the first attempt.
+
+## Playbook: the improvement loop (ship → measure → fix)
+
+Marketing run from an agent should be a closed loop, not a fire-and-forget:
+
+1. **Ship** — posts (`post`), articles (`publish_article`), site changes (`upload_website_source` → `publish_website`).
+2. **Measure** — after enough time for data: `gsc_search_performance` (which queries/pages gained or lost), `ga4_analyze_pages` / `ga4_custom_report` (traffic, conversion paths), `analyze_post_performance` + `fetch_my_posts` (which posts worked and why).
+3. **Diagnose** — compare against the goal, name the bottleneck: content (hooks, topics, timing), distribution (platform mix), or product (landing page copy, page speed, funnel friction).
+4. **Fix at the right layer** — content problems: adjust the next round's topics/format from what the numbers say. Product problems: if you are running inside a coding agent with the user's app or site codebase available, fix the code itself — landing copy, meta/OG tags, structured data, page speed, signup friction — then redeploy and re-measure. Problems only NoimosAI's data can explain (brand positioning, keyword strategy): update `update_workspace_brand` / knowledge base so every later run inherits the fix.
+
+Cite only numbers the tools returned; never estimate. One loop iteration per reporting period beats daily thrash — most channels need days for meaningful data.
 
 ## Ground rules
 
