@@ -27,7 +27,7 @@ Prefer direct tools when you (the host agent) can do the reasoning; use `chat` w
 2. `fetch_my_posts` — recent posts for the target account (free). Extract the account's real voice: tone, emoji usage, hashtag habits, typical length, hook style.
 3. Author the post text YOURSELF in that voice, in the workspace's output language.
 4. `post` with the right mode:
-   - Always pass `mode` explicitly — omitting it publishes immediately. `mode: "draft"` whenever the user has not explicitly approved the exact text; the post appears in NoimosAI as a draft the user approves in-app.
+   - Always pass `mode` explicitly. `mode: "draft"` whenever the user has not explicitly approved the exact text; the post appears in NoimosAI as a draft the user approves in-app. Omitting it saves a draft, so a forgotten field never becomes a public post.
    - `mode: "publish"` — immediate. Only after the user approved the exact content.
    - `mode: "schedule"` + `scheduleAt` — approved content, later time.
    - `dryRun: true` first when unsure the payload is right.
