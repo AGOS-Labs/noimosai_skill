@@ -81,6 +81,17 @@ For a NoimosAI-generated article (research, SEO scoring, internal links) use `ch
 - Own accounts: `fetch_my_posts`, provider analytics reads (free).
 - External: `search_x_posts`, `search_tiktok_posts`, `search_youtube`, `search_reddit`, `google_trends_interest`, ad-library searches (all billed). Scope tightly; state the platform only if the user named one.
 
+## Playbook: answering the inbox
+
+1. `get_direct_messages` — read the threads (free). It carries both `providerAccountId` (ours) and the ids the writes need.
+2. Draft the reply yourself, in the thread's language, grounded in what the person actually wrote.
+3. Show the user the exact text and get their go-ahead.
+4. `send_dm` (X / Instagram / Facebook / TikTok) or `reply_to_comment` (X / Instagram).
+
+These two **send immediately** — unlike `stage_email_drafts` and `post`'s draft mode, there is no staging state to fall back on, so step 3 is the only approval that exists. Text only; media is an in-app action.
+
+`target` is the conversation id — except Facebook, where Messenger addresses the recipient's PSID (the counterpart's `externalUserId`), and Instagram comment replies, which take the comment id. X rejects a programmatic reply unless that post's author @mentioned this account or quoted one of its posts; report that refusal rather than retrying.
+
 ## Playbook: lead generation
 
 1. `apollo_search_organizations` / `apollo_search_people` — target companies/prospects (billed).
