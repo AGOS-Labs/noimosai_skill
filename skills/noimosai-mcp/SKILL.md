@@ -1,6 +1,6 @@
 ---
 name: noimosai-mcp
-description: "Use this skill when the NoimosAI MCP server's tools are available and the user asks to create, personalize, schedule, or draft social media posts, analyze their accounts or website (GSC, GA4, SEO, social analytics), research trends/competitors, generate images or videos, or find leads — via NoimosAI. Covers tool selection, personalization workflows, billing awareness, and the draft/publish/schedule decision. Not for general social media API development."
+description: "This skill should be used when the NoimosAI MCP tools are available and the user asks to draft, schedule or publish social posts, analyze their accounts or website (GSC, GA4, SEO), research competitors, generate images or video, or find leads."
 ---
 
 # NoimosAI MCP Toolkit
@@ -13,6 +13,25 @@ NoimosAI exposes two layers of tools. Pick the right layer first:
 | **Direct tools** | everything else (`fetch_my_posts`, `gsc_*`, `search_*`, `generate_image`, …) | You orchestrate: read data, author content yourself, publish. Faster, cheaper, and you keep control of every step. |
 
 Prefer direct tools when you (the host agent) can do the reasoning; use `chat` when the user wants NoimosAI's own agent to run the whole job.
+
+## First: land on a workspace
+
+Every other tool is workspace-scoped. `list_workspaces` returns what the API key
+can reach.
+
+An empty list means the team has no workspace yet — `create_workspace_and_onboard`
+is the only way to make one. It runs the same six-step onboarding as the web app
+(brand guide, keywords, competitors, triggers, initial feed), including an AI
+research pass over the website that takes SEVERAL MINUTES — one long call, not a
+hang (billed). Never invent a `workspaceId` to work around an empty list.
+
+If it fails PARTWAY, the error names the workspace it already created: retry with
+`resumeWorkspaceId` set to that id and the same other inputs. Retrying without it
+creates a second workspace.
+
+Social accounts cannot be connected here (OAuth needs a browser) — pass
+`providerAccountIds` for ones the team already connected, or follow up with the
+connect playbook below.
 
 ## Billing — read before calling
 
@@ -65,7 +84,7 @@ WordPress and Substack are NOT `post` targets — they are long-form providers. 
 
 A missing requirement is rejected before anything is sent, with a message naming the field. Nothing in the batch publishes when one entry fails, so fix and re-send the whole call.
 
-Attaching media: pass a workspace storage `path` as the post's `media[].path`. Three sources: `generate_image`/`generate_video` return it in their **Structured result** block (use the `path`, not the url); `upload_media` uploads a LOCAL file (your own image, an ffmpeg-edited video; max 32MB) and returns its path; a public `media[].url` also works — the server downloads it into the workspace.
+Attaching media: pass a workspace storage `path` as the post's `media[].path`. Three sources: `generate_image`/`generate_video` return it in their **Structured result** block (use the `path`, not the url); `upload_media` (local server only — it reads the server's own filesystem, so it is absent on the hosted connection) uploads a LOCAL file (your own image, an ffmpeg-edited video; max 32MB) and returns its path; a public `media[].url` also works — the server downloads it into the workspace.
 
 Cancelling: `delete_posts` with the `postId`s (from the `post` tool's result or `fetch_my_posts` rows). All platform copies of each post are removed. A post that already went out is also removed FROM the platform — irreversible, so confirm before calling on published ones.
 
@@ -80,6 +99,25 @@ Resubmitting the same title+body to the same account within 24h is rejected — 
 
 For a NoimosAI-generated article (research, SEO scoring, internal links) use `chat` instead and let its article agent write it.
 
+## Playbook: brand guide & knowledge base (what every later run inherits)
+
+These two stores are what ground every agent run, including the workspace's own
+autonomous ones — a fix here outlives the turn that made it.
+
+- **Brand guide** — `get_workspace_brand` reads identity, websites, keywords,
+  competitors and messaging; `update_workspace_brand` patches only the fields
+  passed. Both free. `keywords` REPLACES the whole set, so read first and send
+  the existing ones back with the additions.
+- **Knowledge base** — documents the agents retrieve from.
+  `knowledge_dataset_list` → `knowledge_dataset_contents` to browse (free),
+  `knowledge_dataset_create` / `knowledge_content_add` to write (billed —
+  ingestion charges embedding credits; a `url` item is fetched and chunked
+  server-side, so it is slow), `knowledge_dataset_update` to rename (free), and
+  `knowledge_dataset_delete` / `knowledge_content_delete` to remove (free,
+  irreversible). An item carries `text` OR `url`, never both. Title the dataset
+  after what the documents ARE ("2026 pricing pages"), never after a tool or
+  agent.
+
 ## Playbook: analytics-grounded content
 
 1. Read real numbers first: `gsc_search_performance` (queries/pages), `ga4_custom_report` / `ga4_analyze_pages` (traffic), `analyze_post_performance` (social), `semrush_*` (keywords/competitors — billed).
@@ -93,7 +131,9 @@ For a NoimosAI-generated article (research, SEO scoring, internal links) use `ch
 
 ## Playbook: answering the inbox
 
-1. `get_direct_messages` — read the threads (free). It carries both `providerAccountId` (ours) and the ids the writes need.
+1. Read first (free), and take the id from the tool that actually carries it:
+   - DMs — `get_direct_messages`, which carries both `providerAccountId` (ours) and the conversation id. It covers X / Instagram / Facebook; no read tool exposes a TikTok conversation id.
+   - Comments / mentions — `list_x_user_mentions` (X), `instagram_comments_list` or `instagram_mentioned_comment_get` (Instagram). `get_direct_messages` returns DM threads only and never a comment id. The target must already be ingested; a mention the poller has not picked up yet returns not-found.
 2. Draft the reply yourself, in the thread's language, grounded in what the person actually wrote.
 3. Show the user the exact text and get their go-ahead.
 4. `send_dm` (X / Instagram / Facebook / TikTok) or `reply_to_comment` (X / Instagram).
@@ -112,9 +152,15 @@ These two **send immediately** — unlike `stage_email_drafts` and `post`'s draf
 
 You build the site locally (Next.js or static — your own code, your own quality bar); NoimosAI hosts it.
 
+> **Step 3 needs the LOCAL (stdio) server.** `upload_website_source` reads a
+> directory off the machine the server runs on, so it is registered only by the
+> locally-installed `noimosai-mcp`. On the hosted connection
+> (`https://mcp.noimosai.com/mcp`) that machine is a shared container, so the
+> tool is absent — push site source from the local server or the NoimosAI app.
+
 1. `create_website` — new site record, returns `websiteId` (or `list_websites` to reuse one).
 2. Build the site locally in a project directory.
-3. `upload_website_source` — pass the project root's absolute path; it packs and pushes the SOURCE (`node_modules`/`.git`/`.next` excluded; the build runs server-side) and triggers a build. Re-upload to iterate — it replaces the previous source.
+3. `upload_website_source` (local server only) — pass the project root's absolute path; it packs and pushes the SOURCE (`node_modules`/`.git`/`.next` excluded; the build runs server-side) and triggers a build. Re-upload to iterate — it replaces the previous source.
 4. `get_website_build_status` — poll until `success` (or read `buildError` and fix).
 5. `publish_website` — production hosting. ONLY after the user approved going live; `unpublish_website` reverses it.
 
@@ -126,10 +172,10 @@ You build the site locally (Next.js or static — your own code, your own qualit
 
 Marketing run from an agent should be a closed loop, not a fire-and-forget:
 
-1. **Ship** — posts (`post`), articles (`publish_article`), site changes (`upload_website_source` → `publish_website`).
+1. **Ship** — posts (`post`), articles (`publish_article`), site changes (`upload_website_source` → `publish_website`; the source push needs the local server).
 2. **Measure** — after enough time for data: `gsc_search_performance` (which queries/pages gained or lost), `ga4_analyze_pages` / `ga4_custom_report` (traffic, conversion paths), `analyze_post_performance` + `fetch_my_posts` (which posts worked and why).
 3. **Diagnose** — compare against the goal, name the bottleneck: content (hooks, topics, timing), distribution (platform mix), or product (landing page copy, page speed, funnel friction).
-4. **Fix at the right layer** — content problems: adjust the next round's topics/format from what the numbers say. Product problems: if you are running inside a coding agent with the user's app or site codebase available, fix the code itself — landing copy, meta/OG tags, structured data, page speed, signup friction — then redeploy and re-measure. Problems only NoimosAI's data can explain (brand positioning, keyword strategy): update `update_workspace_brand` / knowledge base so every later run inherits the fix.
+4. **Fix at the right layer** — content problems: adjust the next round's topics and format from what the numbers say. Product problems: when running inside a coding agent with the user's app or site codebase available, fix the code itself — landing copy, meta/OG tags, structured data, page speed, signup friction — then redeploy and re-measure. Positioning or keyword-strategy problems: fix the brand guide / knowledge base (above), which every later run inherits.
 
 Cite only numbers the tools returned; never estimate. One loop iteration per reporting period beats daily thrash — most channels need days for meaningful data.
 
