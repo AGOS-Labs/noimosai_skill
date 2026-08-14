@@ -21,6 +21,16 @@ Prefer direct tools when you (the host agent) can do the reasoning; use `chat` w
 - Calls are idempotent per request — a network retry never double-charges, but each NEW call is a new charge.
 - Insufficient credits returns an error asking the user to top up in the NoimosAI app; report it, don't retry.
 
+## Playbook: connecting an account (user-driven)
+
+Accounts are connected in the NoimosAI web app, never by you — OAuth consent needs the user's signed-in browser.
+
+1. `get_connect_url` with the provider (`X`, `Instagram`, `YouTube`, `GoogleAnalytics`, …) — returns a link that opens the app's connect dialog for that provider.
+2. Give the user the URL. They open it signed in to NoimosAI, press Connect, and complete the provider's screen (WordPressOrg/Substack/Note ask for credentials or a site URL, Bluesky/Mastodon for a handle + password, instead of an OAuth consent screen).
+3. When they say they finished, `list_integrations` — the new `providerAccountId` appears there. If it doesn't, they didn't complete the flow; ask them to finish, don't regenerate the URL.
+
+The same link also reconnects an expired account when the user reports authorization errors on it.
+
 ## Playbook: personalized post (the core workflow)
 
 1. `get_workspace_context` — brand, goals, output language, connected accounts (free).
