@@ -1,7 +1,6 @@
 # NoimosPostJson
 
 The format `noimosai chat --output json` emits and `noimosai post` consumes.
-Canonical definition: `post-json-schema.ts` in `@agos-labs/noimos-client-core`.
 
 ## Top level
 
