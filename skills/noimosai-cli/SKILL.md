@@ -57,6 +57,31 @@ app; the CLI works inside a team that already exists.
 
 ## Command inventory
 
+### Local media projects with Claude Code or Codex
+
+Keep planning and editing in the host agent and the user's chosen project folder. Upload only explicitly selected references. Discover models and inputs, then estimate before billed generation:
+
+```bash
+noimosai project init -w <workspace-id>
+noimosai model list
+noimosai model form seedance-2.5
+noimosai model cost seedance-2.5
+noimosai generate image --prompt "Product photo" --reference ./product.png
+noimosai generate video --model seedance-2.5 --prompt "Product reveal" --image ./product.png --no-wait
+noimosai generate video --model gemini-omni-1.1-flash --prompt "Animate the product" --reference ./product.png
+noimosai edit image --source ./product.png --operation bg-remove
+noimosai edit video --source ./clip.mp4 --prompt "Change the background"
+noimosai creation list
+noimosai creation get <request-id>
+noimosai creation wait <request-id>
+noimosai creation download <request-id>
+noimosai creation retry-submit <request-id>
+```
+
+Use `--project <directory>` for another local folder, `--dry-run` to estimate without uploading or generating, and `--stdin` or `--args '<json>'` for advanced input. Model selection is for generation; editing selects its provider. Results go to `media/<requestId>/`, with requests and outcomes in `.noimosai/creations/`. Credentials stay in the CLI's existing credential store.
+
+Generation continues after the client exits. Read or wait on the original request ID; never start another generation merely to check progress. `creation retry-submit` repairs an uncertain submission with the exact saved ID and arguments. Different existing output files are never overwritten. Discovery, estimates, history and downloads do not start billed generation; partial and failed generation can still incur provider costs. Gemini Omni's scene `interactionId` can be reused with `--previous-interaction` for a single-scene refinement.
+
 Required arguments and flags are shown; optional ones are in `--help`.
 
 | Command | What it does |
@@ -82,8 +107,9 @@ Required arguments and flags are shown; optional ones are in `--help`.
 | `apikey list\|create [-n <name>] [--expires-in <days>]\|revoke <id> --yes` | Team API keys. Needs a signed-in session (see below), and `create` needs team ADMIN. |
 | `config show\|set <key> <value>\|get <key>\|path` | CLI config. The only settable key is `workspaceId`. |
 
-`-w, --workspace <id>` overrides the configured workspace on every
-workspace-scoped command. `-o, --output <text\|json>` is global — it works on any
+`-w, --workspace <id>` overrides the configured workspace on commands whose
+`--help` lists it. `post` uses the configured workspace; select it first with
+`config set workspaceId <id>`. `-o, --output <text\|json>` is global — it works on any
 command, not just `chat`.
 
 ## Actions that cannot be undone
@@ -172,9 +198,11 @@ writing a post file.
 - **`brand set --keywords` REPLACES the whole set** — pass the existing keywords
   too. Saving rebuilds the brand knowledge base and can take a minute.
 - **`kb create` / `kb add` charge embedding credits**, and URL ingestion is slow.
-- **`tools list` marks billed tools `[billed]` and irreversible ones
-  `[destructive]`** — billed calls deduct team credits at actual external-API/AI
-  cost. Calls are idempotent
+- **Every `tools run`, `analysis run`, and `skill` operation is billed** —
+  at least one NoimosAI credit per execution, with recorded external-API/AI
+  usage charged when higher, including read-only tools. `tools list` and
+  `tools inspect` read the catalog without executing a tool; `[destructive]`
+  marks operations that require `--yes`. Calls are idempotent
   per invocation, so a network retry never double-charges, but each new call is a
   new charge.
 - **Article duplicates are rejected**: the same title+body to the same account
@@ -194,9 +222,14 @@ writing a post file.
 
 ```bash
 noimosai tools run workspace/fetch_my_posts --args '{"limit": 10}'
-noimosai tools run deep_analytics/gsc_search_performance --args '{"days": 28}'
+noimosai tools inspect deep_analytics/gsc_search_performance
+noimosai tools run deep_analytics/gsc_search_performance --args '{"providerAccountId":"<gsc-account-id>","siteUrl":"sc-domain:example.com","startDate":"28daysAgo","endDate":"today"}'
 noimosai tools run social/search_x_posts --args '{"query": "AI agents"}'   # billed
 ```
+
+For GSC, replace the example account and property with the connected account's
+`providerAccountId` from `integration list` and its exact Search Console property
+URL. `startDate` and `endDate` are required; there is no `days` argument.
 
 ## Additional resources
 

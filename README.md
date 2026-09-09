@@ -13,7 +13,7 @@ Agent skills for [NoimosAI](https://noimosai.com) - AI-powered social media mark
 
 ### As an Agent Plugin (ChatGPT, Codex, Cursor, GitHub Copilot, Kiro, VS Code)
 
-This repository is an [Agent Plugins 1.0.0](https://agent-plugins.org/) package: `plugin.json` + `skills/` + `mcp.json`. Installing it in a compatible client delivers both the skills and the NoimosAI remote MCP server (`https://mcp.noimosai.com/mcp`, OAuth-authorized) in one step — follow your client's plugin install flow and point it at this repository.
+This repository is an [Agent Plugins 1.0.0](https://agent-plugins.org/) package: `plugin.json` + `skills/` + `mcp.json`. Installing it in a compatible client delivers both the skills and the NoimosAI remote MCP server (`https://mcp.noimosai.com/mcp`, authorized via OAuth or an `Authorization: Bearer nms_…` API key header) in one step — follow your client's plugin install flow and point it at this repository.
 
 ### As a Claude Code plugin
 
