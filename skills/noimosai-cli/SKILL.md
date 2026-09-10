@@ -76,9 +76,11 @@ noimosai creation get <request-id>
 noimosai creation wait <request-id>
 noimosai creation download <request-id>
 noimosai creation retry-submit <request-id>
+noimosai session list --page 1 -o json
+noimosai session messages <session-id> --page 1 -o json
 ```
 
-Use `--project <directory>` for another local folder, `--dry-run` to estimate without uploading or generating, and `--stdin` or `--args '<json>'` for advanced input. Model selection is for generation; editing selects its provider. Results go to `media/<requestId>/`, with requests and outcomes in `.noimosai/creations/`. Credentials stay in the CLI's existing credential store.
+Use `--project <directory>` for another local folder, `--dry-run` to estimate without uploading or generating, and `--stdin` or `--args '<json>'` for advanced input. Generation and image editing support `--model`; video editing does not. Inspect editing arguments with `model form auto --kind image --operation edit`. Results go to `media/<requestId>/`, with requests and outcomes in `.noimosai/creations/`. Credentials stay in the CLI's existing credential store.
 
 Generation continues after the client exits. Read or wait on the original request ID; never start another generation merely to check progress. `creation retry-submit` repairs an uncertain submission with the exact saved ID and arguments. Different existing output files are never overwritten. Discovery, estimates, history and downloads do not start billed generation; partial and failed generation can still incur provider costs. Gemini Omni's scene `interactionId` can be reused with `--previous-interaction` for a single-scene refinement.
 
@@ -88,6 +90,7 @@ Required arguments and flags are shown; optional ones are in `--help`.
 |---|---|
 | `login [--api-key <key>\|--oauth]` | Authenticate. Bare `login` prompts; `-o json` requires one of the flags. |
 | `logout` | Remove all stored credentials. |
+| `update` | Update the CLI itself to the latest published version. `--check` reports whether one exists without installing it. |
 | `init <name> --type <company\|personal> --description <text> --goals <list>` | Create a workspace and run onboarding. |
 | `chat [-p <message>] [-r <sessionId>]` | Run the agent. Bare `chat` is interactive; `-p` is one-shot. |
 | `post <file> (--now\|--schedule <datetime>\|--draft)` | Publish posts from a NoimosPostJson file. |
