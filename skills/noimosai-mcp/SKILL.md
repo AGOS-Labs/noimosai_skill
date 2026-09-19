@@ -20,14 +20,16 @@ Every other tool is workspace-scoped. `list_workspaces` returns what the API key
 can reach.
 
 An empty list means the team has no workspace yet — `create_workspace_and_onboard`
-is the only way to make one. It runs the same six-step onboarding as the web app
-(brand guide, keywords, competitors, triggers, initial feed), including an AI
-research pass over the website that takes SEVERAL MINUTES — one long call, not a
-hang (billed). Never invent a `workspaceId` to work around an empty list.
+creates one using the same V2 wizard as the web app. Pass `workspaceName` and an
+`onboarding` object with `path: established | idea | discovery` and that path's
+answers (see the live schema). Collect those answers from the user first. The
+call researches and confirms the generated profile/plan; it takes several minutes
+and consumes credits. Background brand setup continues after `completed: true`.
+Never invent a `workspaceId` to work around an empty list.
 
 If it fails PARTWAY, the error names the workspace it already created: retry with
 `resumeWorkspaceId` set to that id and the same other inputs. Retrying without it
-creates a second workspace.
+creates a second workspace. Saved answers and generated results are reused.
 
 Social accounts cannot be connected here (OAuth needs a browser) — pass
 `providerAccountIds` for ones the team already connected, or follow up with the
@@ -40,15 +42,36 @@ connect playbook below.
 - Calls are idempotent per request — a network retry never double-charges, but each NEW call is a new charge.
 - Insufficient credits returns an error asking the user to top up in the NoimosAI app; report it, don't retry.
 
+## Error recovery
+
+Common tool failures set `isError: true` and return the same `{ error: ... }` JSON
+in the text content and `structuredContent`. Inspect `code`, `message`, `retry`,
+and `nextActions`; `retry` is `after_fix`, `after_delay`, `check_result`, or `never`.
+`check_result` means a write may have succeeded: read its existing result first.
+Use `workspaceChoices` when a workspace selection is required. Partial onboarding
+errors carry `context.resumeWorkspaceId`; merge a recovery action's
+`mcp.argumentsPatch` into the original tool input, preserving the original answers.
+`mcp.arguments` is a complete input for a listed recovery read. Fix billing/access
+errors before resuming; do not create another workspace to bypass them.
+
 ## Playbook: connecting an account (user-driven)
 
-Accounts are connected in the NoimosAI web app, never by you — OAuth consent needs the user's signed-in browser.
+Request the connection through MCP; the user completes consent/credentials and
+confirms the selected accounts in their browser. OAuth exchange alone is still pending.
 
 1. `get_connect_url` with the provider (`X`, `Instagram`, `YouTube`, `GoogleAnalytics`, …) — returns a link that opens the app's connect dialog for that provider.
-2. Give the user the URL. They open it signed in to NoimosAI, press Connect, and complete the provider's screen (WordPressOrg/Substack/Note ask for credentials or a site URL, Bluesky/Mastodon for a handle + password, instead of an OAuth consent screen).
+2. Give the user the URL. Sign-in preserves the requested workspace/provider. They complete the provider's screen (WordPressOrg/Substack/Note ask for credentials or a site URL, Bluesky/Mastodon for a handle + password), then select accounts and press Connect in the app to save them.
 3. When they say they finished, `list_integrations` — the new `providerAccountId` appears there. If it doesn't, they didn't complete the flow; ask them to finish, don't regenerate the URL.
 
 The same link also reconnects an expired account when the user reports authorization errors on it.
+
+If your client already runs a loopback listener on the user's machine, pass
+`callback: { port, state }` to `get_connect_url` (random state, 32+ base64url characters).
+After confirmation the browser visits `http://127.0.0.1:<port>/integration/callback`
+with `state`, `workspaceId`, `status` (`connected`, `cancelled`, or `failed`) and repeated
+`accountId` parameters. Validate state/workspace and verify IDs with `list_integrations`.
+Do not supply a remote MCP server's port. Without a local listener, use the plain URL;
+the CLI's `integration connect` manages its own listener when available on the user's machine.
 
 ## Playbook: personalized post (the core workflow)
 
@@ -222,6 +245,12 @@ Marketing run from an agent should be a closed loop, not a fire-and-forget:
 4. **Fix at the right layer** — content problems: adjust the next round's topics and format from what the numbers say. Product problems: when running inside a coding agent with the user's app or site codebase available, fix the code itself — landing copy, meta/OG tags, structured data, page speed, signup friction — then redeploy and re-measure. Positioning or keyword-strategy problems: fix the brand guide / knowledge base (above), which every later run inherits.
 
 Cite only numbers the tools returned; never estimate. One loop iteration per reporting period beats daily thrash — most channels need days for meaningful data.
+
+## GEO tracking settings
+
+Read `geo_get_settings` first for the owned brand's saved prompt IDs, active states, supported models and frequency. Use `geo_preview_settings` with a patch containing `addPrompts` (explicit topic, prompt, models, active), `setPrompts` (promptId, active), and/or `frequencyDays` (1/7/14). Unspecified prompts and history are preserved. Show the complete before/after and recurring monthly credit estimate, then ask the user to approve. Only then call `geo_apply_settings` with the returned `confirmToken`, the same workspace/brand and `confirmedByUser: true`.
+
+Tokens expire after 15 minutes and reject concurrent edits or a different user/brand. Read settings after an uncertain save; do not blindly create and apply another change. Expired/stale previews require renewed approval. An estimate is not a spending cap, and saving does not run an immediate measurement. Settings require workspace edit access. Use the billed `get_geo_brand_data` bridge for saved visibility/trends/citations, or billed `analyze_geo_brand` for fresh analysis; settings reads/previews do not run AI analysis. This is the Web workspace surface, not standalone Platform.
 
 ## Ground rules
 

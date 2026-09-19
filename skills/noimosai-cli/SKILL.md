@@ -28,19 +28,46 @@ noimosai config set workspaceId <id>          # …and make it the default
 With no workspace yet, create one instead of picking one:
 
 ```bash
-noimosai init "Acme" --type company --website https://acme.com \
-  --description "B2B analytics for logistics" --goals masterSearch,scaleSocial
+noimosai init "Acme" --input '{"path":"established","websiteUrl":"https://acme.com","goal":"growAwareness","stage":"runningImprove"}'
+noimosai init --schema
 ```
 
-`init` runs the full onboarding, including an AI research pass over the site —
-several minutes. If it fails partway, the error names the workspace it created:
-rerun with `--resume <that id>` and the same flags rather than starting over.
-Goals are a comma-separated subset of `outsmartCompetitors`, `masterSearch`,
-`maximizeSales`, `scaleSocial`, `buildWorkflows`, `growthRoadmap`,
-`adsManagement`. `--website` is required for `--type company`.
+`init` uses the same V2 questions and completion as the web app. Collect the user's
+answers for `established`, `idea`, or `discovery`; inspect `--schema` for the exact
+fields and enums. `--stdin < onboarding.json` accepts the same onboarding object
+as `--input`. It researches and confirms the generated profile/plan (billed,
+several minutes); background brand setup continues after completion. If it fails,
+use `--resume <workspace-id>` with the same input. Saved answers and generation
+are reused. The old `--type` / `--goals` flags are no longer supported.
 
-Connecting social accounts needs a browser — do it in the NoimosAI app, then
-confirm with `noimosai integration list`.
+Request a social/analytics account connection after `init` with:
+
+```bash
+noimosai integration connect X -w <workspace-id> -o json
+```
+
+The CLI opens the provider dialog, waits for browser consent/credentials and the
+app's final account-selection confirmation, then verifies the saved accounts via
+the workspace API. The browser returns to a loopback listener on the CLI's machine.
+URLs/progress go to stderr; stdout emits one JSON result with `status: "connected"`
+and `accounts[].providerAccountId`. The same command reconnects expired accounts.
+`--no-open` prints the URL for manual opening; `--timeout <seconds>` sets the wait
+(default 600, maximum 1800). For SSH/remote agents use `--no-open --no-wait`: this
+returns `status: "pending"` and a URL without a local callback. Give it to the user,
+then check `noimosai integration list -w <workspace-id>` after they finish. Closing
+the browser without completing the flow times out. If an API endpoint is customized,
+set `NOIMOS_APP_URL` to the matching web app origin.
+
+### Error recovery
+
+Errors with `-o json` return one `{ "error": { "code", "message", "retry", "nextActions", ... } }`
+object on stdout and exit nonzero, including argument/option errors. Progress goes to
+stderr. `retry` is `after_fix`, `after_delay`, `check_result`, or `never`; it never
+authorizes blindly repeating a write. Credits and workspace-plan limits need a fix,
+not a delay. `issues` names invalid fields. A partial `init` error carries
+`context.resumeWorkspaceId` and a `nextActions[].cli` argument vector (supply the
+original answers on stdin). If creation failed before an ID was received, list
+workspaces first. Keep using an existing workspace instead of creating duplicates.
 
 ### The two credentials are not interchangeable
 
@@ -91,7 +118,7 @@ Required arguments and flags are shown; optional ones are in `--help`.
 | `login [--api-key <key>\|--oauth]` | Authenticate. Bare `login` prompts; `-o json` requires one of the flags. |
 | `logout` | Remove all stored credentials. |
 | `update` | Update the CLI itself to the latest published version. `--check` reports whether one exists without installing it. |
-| `init <name> --type <company\|personal> --description <text> --goals <list>` | Create a workspace and run onboarding. |
+| `init <name> --input <json>` / `--stdin` | Create a workspace and complete V2 onboarding. `init --schema` lists all three paths. |
 | `chat [-p <message>] [-r <sessionId>]` | Run the agent. Bare `chat` is interactive; `-p` is one-shot. |
 | `post <file> (--now\|--schedule <datetime>\|--draft)` | Publish posts from a NoimosPostJson file. |
 | `delete-post <postId...> --yes` | Delete every platform copy of each post. Max 25. |
@@ -101,11 +128,13 @@ Required arguments and flags are shown; optional ones are in `--help`.
 | `tools list [-q <text>] [--server <group>]` / `tools inspect <server>/<name>` / `tools run <server>/<name> --args '<json>'` | Discover typed tools, inspect the exact schema/billing/safety metadata, then run one. Server-marked destructive tools require `--yes`. |
 | `analysis list [--category <category>]` / `analysis inspect <name>` / `analysis run <name> --args '<json>'` | Read-only analysis catalog: GEO, video/site/SEO/content, social insights, GA4/GSC/Semrush and business data. Every run deducts at least one credit. Alias: `analyze`. |
 | `brand get` / `brand set [...]` | Read / patch the brand guide the agents are grounded on. |
+| `geo settings` / `geo preview --patch <json>` / `geo apply <confirm-token> --yes` | Manage GEO prompts, pause/resume and measurement frequency through an approved preview. |
 | `kb list\|show <id>\|create <title>\|add <id>\|update <id>\|rm <id> --yes` | Knowledge base the agents retrieve from. Deletion is permanent. |
 | `skill list\|show <name>\|create <name> -d <desc> -f <SKILL.md>\|update <name>\|delete <name> --yes` | Workspace skills — reusable SKILL.md recipes later agent runs load. An API key creates them disabled (see below). |
 | `inbox dm <provider> <target> <text> -a <accountId> --yes` | Send a DM. X / Instagram / Facebook / TikTok. `--yes` is required; `--dry-run` previews. |
 | `inbox reply <provider> <target> <text> -a <accountId> --yes` | Reply to a comment or mention. X / Instagram. `--yes` is required; `--dry-run` previews. |
 | `integration list` | Connected accounts and their `providerAccountId`s. |
+| `integration connect <provider> [-w <id>] [--no-open] [--no-wait] [--timeout <seconds>]` | Request browser consent and return after saved accounts are verified. |
 | `workspace list` | Available workspaces. |
 | `apikey list\|create [-n <name>] [--expires-in <days>]\|revoke <id> --yes` | Team API keys. Needs a signed-in session (see below), and `create` needs team ADMIN. |
 | `config show\|set <key> <value>\|get <key>\|path` | CLI config. The only settable key is `workspaceId`. |
@@ -114,6 +143,12 @@ Required arguments and flags are shown; optional ones are in `--help`.
 `--help` lists it. `post` uses the configured workspace; select it first with
 `config set workspaceId <id>`. `-o, --output <text\|json>` is global — it works on any
 command, not just `chat`.
+
+## GEO tracking settings
+
+Read `geo settings` for current prompt IDs and supported models. `geo preview --patch '<json>'` accepts `frequencyDays` (1/7/14), `addPrompts` (topic, prompt, models and explicit active), and/or `setPrompts` (promptId, active). Show the full preview and recurring monthly estimate; only after user approval run `geo apply <confirm-token> --yes`. Use the same `-w` and optional `--brand` throughout. Unspecified prompts and history are preserved; workspace edit access is required.
+
+The token expires after 15 minutes and rejects concurrent edits or another user/brand. Read settings after a lost response before retrying; expired/stale previews need new approval. Estimates are not spending caps. Saving does not measure immediately: due work is checked hourly. These commands do not start billed AI analysis; `analysis run get_geo_brand_data` reads saved visibility/trends/citations and `analysis run analyze_geo_brand` runs fresh analysis (both billed; inspect their schemas). This surface uses Web workspaces, not standalone Platform credentials.
 
 ## Actions that cannot be undone
 
