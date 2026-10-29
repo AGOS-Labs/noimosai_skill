@@ -91,10 +91,10 @@ Keep planning and editing in the host agent and the user's chosen project folder
 ```bash
 noimosai project init -w <workspace-id>
 noimosai model list
-noimosai model form seedance-2.5
-noimosai model cost seedance-2.5
+noimosai model form kling-4.0
+noimosai model cost kling-4.0
 noimosai generate image --prompt "Product photo" --reference ./product.png
-noimosai generate video --model seedance-2.5 --prompt "Product reveal" --image ./product.png --no-wait
+noimosai generate video --model kling-4.0 --prompt "Product reveal" --image ./product.png --no-wait
 noimosai generate video --model gemini-omni-1.1-flash --prompt "Animate the product" --reference ./product.png
 noimosai edit image --source ./product.png --operation bg-remove
 noimosai edit video --source ./clip.mp4 --prompt "Change the background"
