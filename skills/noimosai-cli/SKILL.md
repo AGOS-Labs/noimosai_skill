@@ -95,7 +95,7 @@ noimosai model form kling-4.0
 noimosai model cost kling-4.0
 noimosai generate image --prompt "Product photo" --reference ./product.png
 noimosai generate video --model kling-4.0 --prompt "Product reveal" --image ./product.png --no-wait
-noimosai generate video --model gemini-omni-1.1-flash --prompt "Animate the product" --reference ./product.png
+noimosai generate video --model gemini-omni-1.2-flash --prompt "Animate the product" --reference ./product.png
 noimosai edit image --source ./product.png --operation bg-remove
 noimosai edit video --source ./clip.mp4 --prompt "Change the background"
 noimosai creation list
