@@ -6,8 +6,8 @@ Agent skills for [NoimosAI](https://noimosai.com) - AI-powered social media mark
 
 | Skill                                | Description                                                                     |
 | ------------------------------------ | ------------------------------------------------------------------------------- |
-| [noimosai-cli](skills/noimosai-cli/) | NoimosAI CLI reference for social media content generation and publishing       |
-| [noimosai-mcp](skills/noimosai-mcp/) | NoimosAI MCP toolkit playbooks: personalized posts, analytics, research, website |
+| [noimosai-cli](skills/noimosai-cli/) | Delegate marketing and external research from the terminal       |
+| [noimosai-mcp](skills/noimosai-mcp/) | Delegate marketing and research, retrieve workspace metrics and act on results |
 
 ## Installation
 

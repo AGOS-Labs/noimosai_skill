@@ -10,6 +10,7 @@ The format `noimosai chat --output json` emits and `noimosai post` consumes.
   metadata: {
     generatedAt: string,           // ISO 8601
     sessionId?: string | null,     // pass to `chat -r` to continue the session
+    sessionUrl?: string,           // web conversation when the workspace saved this turn
     prompt?: string
   },
   output?: string | null,          // the agent's prose reply
@@ -42,7 +43,7 @@ NoimosPendingQuestion = {
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `platform` | string | Yes | `x` `threads` `facebook` `instagram` `youtube` `linkedin` `tiktok` `bluesky` `pinterest` `snapchat` `mastodon` `note`. Chat display names (`X (Twitter)`, `Instagram`, …) and short aliases (`fb` `ig` `yt` `twitter`) are accepted too. |
+| `platform` | string | Yes | `x` `threads` `facebook` `instagram` `youtube` `linkedin` `tiktok` `bluesky` `pinterest` `mastodon` `note`. Chat display names (`X (Twitter)`, `Instagram`, …) and short aliases (`fb` `ig` `yt` `twitter`) are accepted too. |
 | `dataKey` | string | No | Internal routing key — **omit it**; it is derived from `platform`. Present in chat output: pass through unchanged. |
 | `providerAccountId` | string | To publish | From `noimosai integration list`, or already filled in chat output. Required in the payload for `note`. |
 | `username` | string | No | Display only. |
@@ -67,7 +68,6 @@ only to change the default.
 | tiktok | **required** | — | `title` = caption's first line (≤90); `postType` from the media mime |
 | youtube | **required — a video** | — | `title` = first line (≤100); `categoryId` `"22"`; `privacyStatus` PUBLIC |
 | pinterest | **required** | `options.pinterest.boardId` | `description` = the text |
-| snapchat | **required** | — | `postType` SPOTLIGHT |
 | note | optional | — | `title` = first line; `isDraft` follows the post mode |
 
 ```typescript
@@ -80,7 +80,6 @@ options = {
   pinterest?: { boardId: string, title?, link?, altText? },      // boardId REQUIRED
   instagram?: { igPostType?: "CAROUSEL"|"REELS"|"STORIES", altText?,
                 userTags?: { username: string, x?: number, y?: number }[] },
-  snapchat?:  { postType?: "STORY"|"SPOTLIGHT"|"SAVED_STORY", link? },
   note?:      { title? }
 }
 ```
@@ -96,10 +95,10 @@ batch. The message names the field.
 
 - `textBlocks` must produce non-empty text.
 - No `media[]` item may have neither `url` nor `path`.
-- instagram / tiktok / pinterest / snapchat need ≥1 media item; youtube needs one
+- instagram / tiktok / pinterest need ≥1 media item; youtube needs one
   with a `video/*` mimeType.
 - pinterest needs `options.pinterest.boardId` (`noimosai pinterest-boards <providerAccountId>`).
-- note needs `providerAccountId`.
+- note needs `providerAccountId` and supports workspace drafts for manual posting.
 
 Filling another platform's `options` block is not an error — it is ignored. When
 a required field is missing and a foreign block is filled, the error says so;
@@ -107,8 +106,7 @@ that is almost always the actual mistake.
 
 ## Schedule format
 
-`noimosai post --schedule "YYYY-MM-DD HH:MM"` — local time, at least 30 minutes
-out, converted to ISO 8601 UTC internally.
+Use `--schedule "YYYY-MM-DD HH:MM" --time-zone Asia/Tokyo` or supply an ISO 8601 timestamp with an explicit offset. Choose a time at least 30 minutes ahead. The receipt includes both the local time and UTC.
 
 ## Example
 
