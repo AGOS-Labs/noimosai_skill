@@ -130,6 +130,7 @@ Required arguments and flags are shown; optional ones are in `--help`.
 | `login [--api-key <key>\|--oauth]` | Authenticate. Bare `login` prompts; `-o json` requires one of the flags. |
 | `logout` | Remove all stored credentials. |
 | `update` | Update the CLI itself to the latest published version. `--check` reports whether one exists without installing it. |
+| `doctor` | Check config, sign-in, workspace access, hosted MCP readiness and CLI version in one read-only pass; a failed or warned check carries `fix`, the command that fixes it, when there is one, and the exit status is 1 when a check fails. Run it first when a command fails with an auth or workspace error. |
 | `init <name> --input <json>` / `--stdin` | Create a workspace and complete V2 onboarding. `init --schema` lists all three paths. |
 | `chat [-p <message>] [-r <sessionId>]` | Run the agent. Bare `chat` is interactive; `-p` is one-shot. |
 | `post <file> (--now\|--schedule <datetime>\|--draft)` | Publish posts from a NoimosPostJson file. |
@@ -139,6 +140,7 @@ Required arguments and flags are shown; optional ones are in `--help`.
 | `pinterest-boards <providerAccountId>` | List boards as `id<TAB>name (N pins, PRIVACY)`. |
 | `tools list [-q <text>] [--server <group>]` / `tools inspect <server>/<name>` / `tools run <server>/<name> --args '<json>'` | Discover typed tools, inspect the exact schema/billing/safety metadata, then run one. Server-marked destructive tools require `--yes`. |
 | `mcp list --query <text>` / `mcp inspect <name>` / `mcp call <name> --args '<json>'` | Use NoimosAI hosted MCP tools such as CRM and website operations with a workspace API key. Calls that can make changes take `--yes`. |
+| `mcp setup --client <claude-code\|codex\|cursor\|claude-ai\|chatgpt>` | Print how to connect that MCP client to the hosted server. Writes nothing and prints no key. |
 | `analysis list [--category <category>]` / `analysis inspect <name>` / `analysis run <name> --args '<json>'` | Read-only analysis catalog: GEO, video/site/SEO/content, social insights, GA4/GSC/Semrush and business data. Every run deducts at least one credit. Alias: `analyze`. |
 | `brand get` / `brand set [...]` | Read / patch the brand guide the agents are grounded on. |
 | `geo settings` / `geo preview --patch <json>` / `geo apply <confirm-token> --yes` | Manage GEO prompts, pause/resume and measurement frequency through an approved preview. |
@@ -265,7 +267,8 @@ writing a post file.
   new charge.
 - **Article duplicates are rejected**: the same title+body to the same account
   within 24h. That is the duplicate guard, not a transient failure. X Articles
-  additionally need a Premium+/Verified Organization account.
+  additionally need an X subscription that includes Articles (e.g. X Premium or
+  Premium Business).
 - **`publish-article` is asynchronous** — it returns an `idempotencyKey` once
   queued, not a live URL.
 - **X rejects a programmatic reply** unless that post's author @mentioned this

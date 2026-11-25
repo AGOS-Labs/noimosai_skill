@@ -126,7 +126,7 @@ Editing a post that already went out: `update_published_post` with its `postId`,
 1. Read the destination and voice: `get_workspace_context` (free) + `fetch_my_articles` (billed).
 2. Write the article yourself — title + body.
 3. Optional header image: `creative_studio`, then pass a returned `media` path as `headerImagePath`.
-4. `publish_article` with the WordPress / X / Substack `providerAccountId`, plus `scheduleAt` to schedule instead of publishing now. It is a real public action — only after the user approved the exact text. X Articles need a Premium+/Verified Organization account. Publishing is asynchronous: you get an `idempotencyKey` once queued, not a live URL.
+4. `publish_article` with the WordPress / X / Substack `providerAccountId`, plus `scheduleAt` to schedule instead of publishing now. It is a real public action — only after the user approved the exact text. X Articles need an X subscription that includes Articles (e.g. X Premium or Premium Business). Publishing is asynchronous: you get an `idempotencyKey` once queued, not a live URL.
 
 Resubmitting the same title+body to the same account within 24h is rejected — that is the duplicate guard, not a failure to retry around.
 
