@@ -1,7 +1,7 @@
 {
   "name": "noimosai",
   "version": "1.0.0",
-  "description": "Delegate marketing to the NoimosAI Marketing Workspace, research with workspace credits and schedule approved posts on connected accounts.",
+  "description": "Ask NoimosAI to research, create finished media, draft content, and schedule approved posts in your Marketing Workspace.",
   "author": {
     "name": "AGOS Labs",
     "url": "https://noimosai.com"

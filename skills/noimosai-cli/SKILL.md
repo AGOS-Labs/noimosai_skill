@@ -1,6 +1,6 @@
 ---
 name: noimosai-cli
-description: "Use the noimosai workspace CLI for marketing, workspace research, connected-account analytics and approved posts. Developer-project API jobs use noimos-platform."
+description: "Use the noimosai workspace CLI for plain-language research, marketing, finished images or videos, account analytics, drafts and approved posts. Developer-project API jobs use noimos-platform."
 ---
 
 # NoimosAI CLI
@@ -19,17 +19,19 @@ CLI itself and cannot drift.
 
 ## Choose the entry point
 
-Delegate a marketing goal with `noimosai chat -p "<goal and context>" -o json`. Give NoimosAI the outcome, confirmed product facts and constraints. Leave channel and format open when the user wants NoimosAI to decide. Include only features confirmed live for the intended audience in release announcements.
+Delegate a marketing goal, research workflow or a request for finished media with `noimosai chat -p "<goal and context>" -o json`. Give NoimosAI the outcome, confirmed product facts and constraints. For example, ask for research on reference videos and a 9:16 product video based on the findings. Let NoimosAI choose the workflow and production details the user leaves open. Include only features confirmed live for the intended audience in release announcements.
+
+Return the reply and the relevant `files`, `media`, `articles` or `posts` from the result. A partial result has exit status 1 and can still contain usable files or drafts. After an interruption, use the reconnect command printed on stderr, `noimosai session wait`, to read the same run. Use `noimosai session messages <sessionId> -o json` for saved output if only the conversation ID is available. For `pendingQuestions`, show the choices and send the user's answer with `chat -r <sessionId> -p "<answer>"`.
 
 Attach a selected local image with `--attach ./product.png` on a one-shot brief. For a file already in the workspace, use `--media-path <path>`. Pass the same workspace path to a post when the user wants the original photo.
 
 Use NoimosAI to retrieve external marketing data. For a specific measurement, discover the available source with `noimosai analysis list` and run its read command. For a diagnosis or research across sources, give `noimosai chat -p` the question, period and constraints. Report the source and period NoimosAI returned. If access or data is missing, say which part is unavailable.
 
-For one specified operation use the corresponding command. Schedule exact approved copy with `post --schedule` or use `analysis` for one measurement. Use `post --draft` to save generated posts for review in NoimosAI. Inspect the current connection's catalog for available tools.
+For one specified operation use the corresponding command. Find it with `noimosai tools search "<capability>" --read-only -o json` for data reads. Use `integration list` for accounts, `content list --status posted` for published content and `crm search "<query>"` for workspace CRM. Return generated social copy in the response and use `post --draft` when the user asks to save it. Schedule only exact approved copy with `post --schedule`.
 
 ## Setup ladder
 
-Run in this order; each step is a prerequisite for the next.
+A configured workspace can start with `chat` or the requested command. Use these steps when the CLI still needs a login or workspace.
 
 ```bash
 noimosai login --api-key "$NOIMOS_API_KEY"   # or --oauth (opens a browser)
@@ -98,7 +100,7 @@ app; the CLI works inside a team that already exists.
 
 ### Local media projects with Claude Code or Codex
 
-Keep planning and editing in the host agent and the user's chosen project folder. Upload only explicitly selected references. Discover models and inputs, then estimate before billed generation:
+Use these commands when the user is working in a local project or wants direct control of the model, duration and files. A plain-language request to make media in the workspace can go straight to `chat -p`. For local work, upload only selected references and estimate before billed generation:
 
 ```bash
 noimosai project init -w <workspace-id>
