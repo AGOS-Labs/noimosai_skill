@@ -72,14 +72,31 @@ only to change the default.
 
 ```typescript
 options = {
+  x?:         { replySettings?: "following"|"mentionedUsers"|"subscribers"|"verified",
+                madeWithAi?: boolean, paidPartnership?: boolean },
+  threads?:   { replyControl?: "everyone"|"accounts_you_follow"|"mentioned_only"|"followers_only",
+                isSpoilerMedia?: boolean },
   tiktok?:    { title?, postType?: "VIDEO"|"IMAGE",
                 privacyLevel?: "PUBLIC_TO_EVERYONE"|"MUTUAL_FOLLOW_FRIENDS"|"FOLLOWER_OF_CREATOR"|"SELF_ONLY",
                 disableDuet?, disableStitch?, disableComment?, isAigc? },
   youtube?:   { title?, tags?: string[], categoryId?,
-                privacyStatus?: "PUBLIC"|"UNLISTED"|"PRIVATE", publicStatsViewable? },
-  pinterest?: { boardId: string, title?, link?, altText? },      // boardId REQUIRED
+                privacyStatus?: "PUBLIC"|"UNLISTED"|"PRIVATE", publicStatsViewable?,
+                paidPromotion?: "not_stated"|"contains"|"none",
+                selfDeclaredMadeForKids?: boolean, containsSyntheticMedia?: boolean },
+  linkedin?:  { visibility?: "PUBLIC"|"CONNECTIONS"|"LOGGED_IN",
+                isReshareDisabledByAuthor?: boolean },
+  pinterest?: { boardId: string, boardSectionId?, title?, link?, altText? }, // boardId REQUIRED
   instagram?: { igPostType?: "CAROUSEL"|"REELS"|"STORIES", altText?,
-                userTags?: { username: string, x?: number, y?: number }[] },
+                userTags?: { username: string, x?: number, y?: number }[],
+                trialParams?: { graduationStrategy: "MANUAL"|"SS_PERFORMANCE" },
+                shareToFeed?: boolean, thumbOffset?: number, coverUrl?: string,
+                audioName?: string, isPaidPartnership?: boolean },
+  bluesky?:   { langs?: string[], labels?: ("sexual"|"nudity"|"porn"|"graphic-media")[],
+                replyGate?: "everyone"|"nobody"|"following"|"followers"|"mentioned",
+                disableQuotes?: boolean },
+  mastodon?:  { visibility?: "public"|"unlisted"|"private"|"direct",
+                spoilerText?: string, sensitive?: boolean, language?: string,
+                poll?: { options: string[], durationMinutes?: number, multiple?: boolean, hideTotals?: boolean } },
   note?:      { title? }
 }
 ```
